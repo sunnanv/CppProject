@@ -8,9 +8,9 @@
 template <typename Iterator, typename T1, typename T2>
 class high_level_iterator {
 public:
-	using value_type = typename Iterator::value_type;
+	using value_type = typename T1::value_type;
 	using iterator_category = std::input_iterator_tag;
-	using difference_type = typename Iterator::difference_type;
+	using difference_type = typename T1::difference_type;
 	using pointer = value_type*;
 	using reference = value_type&;
 
