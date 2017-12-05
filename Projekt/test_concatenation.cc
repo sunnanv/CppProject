@@ -1,6 +1,7 @@
 #include "concatenation.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include <array>
 #include <vector>
@@ -19,522 +20,223 @@ using std::vector;
 using std::deque;
 void printCell(string name, bool passed, string why) 
 {
-	string o = "|  ";
-	o += name + ":";
+	std::stringstream ss;
+	/* Create first row */
+	ss << "|  " << name << ":";
 	int rowi = 0;
 	if(passed)
 	{
-		o += " PASSED";
+		ss << " PASSED";
 	} else 
 	{
-		o += " FAILED";
+		ss << " FAILED";
 	}
 
-	rowi = o.size()-3;
+	/* fill with blankspace */
+	rowi = ss.str().size()-3;
 	while(rowi != 38)
 	{
-		o += " ";
+		ss.put(' ');
 		++rowi;
 	}
-	o += "|\n|";
+	ss << "|\n|";
 
+	/* If not passed, output why */
 	rowi = 0;
 	if(!passed)
 	{
-		o += "    ";
+		ss << "    ";
 		for(size_t i = 0; i != why.size(); ++i)
 		{
 			if(i != 0 && i % 33 == 0)
 			{
-				o += "   |\n|  ";
+				ss << "   |\n|    ";
 				rowi = 0;
 			}
 			++rowi;
-			o += why.at(i);
+			ss.put(why.at(i));
 		}
 		while(rowi != 36)
 		{
-			o += " ";
+			ss.put(' ');
 			++rowi;
 		}
-		o += "|\n|";
+		ss << "|\n|";
 	}
-	
 
-	
-
-
-	
+	/* Ending line */
 	for(int i = 0; i != 40; ++i)
 	{
-		o += "-";
+		ss.put('-');
 	}
-	o += "|\n";
-	std::cout << o;
+	ss << "|\n";
 
+	std::cout << ss.str();
 }
 
-bool test_vector_int() 
+/* Template method for testing std::copy, iterator and rangefor */
+template<typename T1, typename T2>
+bool test(string name, T1& first, T2& second, typename T1::value_type find[])
 {
-	string name = "test_vector_int";
-	using IntVector = vector<int>;
+	bool success = true;
+	string why = "";
+	concatenation<T1, T2> conc(first, second);
 
-	IntVector i1 = {1,2,3,4,5,6,7,8};
-	IntVector i2 = {11,12,13,14,15};
+	/* Get the correct elements and put them in T1 containers
+	 * for checking during test */
+	vector<typename T1::value_type> correct_full;
+	std::copy(first.begin(), first.end(), back_inserter(correct_full));
+	std::copy(second.begin(), second.end(), back_inserter(correct_full));
 
-	concatenation<IntVector, IntVector> conc(i1, i2);
+	auto start_c = std::find(correct_full.begin(), correct_full.end(), find[0]);
+	auto stop_c = std::find(correct_full.begin(), correct_full.end(), find[1]);
+	vector<typename T1::value_type> correct_part;
+	std::copy(start_c, stop_c, back_inserter(correct_part));
 
-	auto first5 = std::find(conc.begin(), conc.end(), 5);
-	auto first14 = std::find(conc.begin(), conc.end(), 14);
 
-	IntVector correct{5,6,7,8,11,12,13};
-	IntVector result;
-	std::copy(first5, first14, std::back_inserter(result));
+	/* Test if copy is working */
+	auto start = std::find(conc.begin(), conc.end(), find[0]);
+	auto stop = std::find(conc.begin(), conc.end(), find[1]);
 
-	for(size_t i = 0; i != correct.size(); ++i)
+	vector<typename T1::value_type> result;
+	std::copy(start, stop, std::back_inserter(result));
+	size_t i1;
+	for(i1 = 0; i1 != correct_part.size(); ++i1)
 	{
 		//cout << result.at(i) << endl;
-		if(correct.at(i) != result.at(i))
+		if(correct_part.at(i1) != result.at(i1))
 		{
-			string s = "(copy " + std::to_string(i)  + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
-			printCell(name, false, s);
-			return false;
+			string a, b;
+			std::ostringstream ss1;
+			std::ostringstream ss2;
+			ss1 << result.at(i1);
+			ss2 << correct_part.at(i1);
+			a = ss1.str();
+			b = ss2.str();
+			why = "(copy " + std::to_string(i1)  + ") (" + a + " != " + b + ")";
+			success = false;
 		}
 	}
 
-	IntVector correct2{1,2,3,4,5,6,7,8,11,12,13,14,15};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
+	size_t i2 = 0;
+	if(success)
 	{
-		if(correct2.at(i) != *it)
+		/* Test normal iteration */
+		for(auto it = conc.begin(); it != conc.end(); ++it, ++i2)
 		{
-			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
+			if(correct_full.at(i2) != *it)
+			{
+			    string a, b;
+			    std::ostringstream ss1;
+				std::ostringstream ss2;
+				ss1 << *it;
+				ss2 << correct_full.at(i2);
+				a = ss1.str();
+				b = ss2.str();
 
-	
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_vector_string()
-{
-	string name = "test_vector_string";
-	using StringVector = vector<string>;
-
-	StringVector s1 = {"this", "is", "a", "test"};
-	StringVector s2 = {"for", "concatenation", "which", "will", "test", "string", "container"};
-
-	concatenation<StringVector, StringVector> conc(s1, s2);
-
-	auto firsta = std::find(conc.begin(), conc.end(), "a");
-	auto firstwhich = std::find(conc.begin(), conc.end(), "which");
-
-	vector<string> correct{"a", "test", "for", "concatenation"};
-
-	std::vector<string> result;
-	std::copy(firsta, firstwhich, std::back_inserter(result));
-
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		//cout << result.at(i) << endl;
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
-			printCell(name, false, s);
-			return false;
+				why = "(iter " + std::to_string(i2) + ") (" + a + " != " + b + ")";
+				success = false;
+			}
 		}
 	}
 
-
-	StringVector correct2{"this", "is", "a", "test","for", "concatenation", "which", "will", "test", "string", "container"};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
+	size_t i3 = 0;
+	if(success)
 	{
-		//std::cout << correct2.at(i) << " = " << *it << endl;
-		if(correct2.at(i) != *it)
+		/* Test rangefor iteration */
+		for(auto it : conc)
 		{
-			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
+			if(correct_full.at(i3) != it)
+			{
+				string a, b;
+				std::ostringstream ss1;
+				std::ostringstream ss2;
+				ss1 << it;
+				ss2 << correct_full.at(i2);
+				a = ss1.str();
+				b = ss2.str();
 
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_deque_int() 
-{
-	string name = "test_deque_int";
-	using IntDeque = deque<int>;
-
-	IntDeque i1 = {1,2,3,4,5,6,7,8};
-	IntDeque i2 = {11,12,13,14,15};
-
-	concatenation<IntDeque, IntDeque> conc(i1, i2);
-
-	auto first5 = std::find(conc.begin(), conc.end(), 5);
-	auto first14 = std::find(conc.begin(), conc.end(), 14);
-
-	IntDeque correct{5,6,7,8,11,12,13};
-	IntDeque result;
-	std::copy(first5, first14, std::back_inserter(result));
-
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		//cout << result.at(i) << endl;
-		if(correct.at(i) != result.at(i))
-		{
-			string s ="(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	IntDeque correct2{1,2,3,4,5,6,7,8,11,12,13,14,15};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
-	{
-		if(correct2.at(i) != *it)
-		{
-			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
-			printCell(name, false, s);
-			return false;
+				why = "(rangefor " + std::to_string(i3) + ") (" + a + " != " + b + ")";
+				success = false;
+			}
+			++i3;
 		}
 	}
 
 	
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_deque_string()
-{
-	string name = "test_deque_string";
-	using StringDeque = deque<string>;
-
-	StringDeque s1 = {"this", "is", "a", "test"};
-	StringDeque s2 = {"for", "concatenation", "which", "will", "test", "string", "container"};
-
-	concatenation<StringDeque, StringDeque> conc(s1, s2);
-
-	auto firsta = std::find(conc.begin(), conc.end(), "a");
-	auto firstwhich = std::find(conc.begin(), conc.end(), "which");
-
-	deque<string> correct{"a", "test", "for", "concatenation"};
-
-	std::deque<string> result;
-	std::copy(firsta, firstwhich, std::back_inserter(result));
-
-	for(size_t i = 0; i != correct.size(); ++i)
+	/* Check if everything is gone through */
+	if(success && i1 != correct_part.size())
 	{
-		//cout << result.at(i) << endl;
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
-			printCell(name, false, s);
-			return false;
-		}
+		why = "(copy) (wrong amount of elements accessed, should be " + std::to_string(correct_part.size()) + ", is " + std::to_string(i1) + ")"; 
+		success = false;
+	}
+	if(success && i2 != correct_full.size())
+	{
+		why = "(iter) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i2) + ")"; 
+		success = false;
+	}
+	if(success && i3 != correct_full.size())
+	{
+		why = "(rangefor) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i3) + ")"; 
+		success = false;
 	}
 
-
-	StringDeque correct2{"this", "is", "a", "test","for", "concatenation", "which", "will", "test", "string", "container"};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
-	{
-		//std::cout << correct2.at(i) << " = " << *it << endl;
-		if(correct2.at(i) != *it)
-		{
-			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_deque_vector_int()
-{
-	string name = "test_deque_vector_int";
-	using IntVector = vector<int>;
-	using IntDeque = deque<int>;
-
-	IntVector i_v = {1,2,3,4,5,6,7,8};
-	IntDeque i_d = {34,35,36,37,38,39};
-
-	concatenation<IntVector, IntDeque> conc(i_v, i_d);
-
-	auto first4 = std::find(conc.begin(), conc.end(), 4);
-	auto first38 = std::find(conc.begin(), conc.end(), 38);
-
-	IntDeque correct = {4,5,6,7,8,34,35,36,37};
-	IntDeque result;
-	std::copy(first4, first38, std::back_inserter(result));
-
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	IntDeque correct2{1,2,3,4,5,6,7,8,34,35,36,37,38,39};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
-	{
-		if(correct2.at(i) != *it)
-		{
-			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
 	
-
-	printCell(name, true, "");
-	return true;
+	printCell(name, success, why);
+	return success;
 }
 
-bool test_deque_vector_string()
-{
-	string name = "test_deque_vector_string";
-	using StringVector = vector<string>;
-	using StringDeque = deque<string>;
-
-	StringVector s_v = {"hello", "I", "am", "testing", "concatenation"};
-	StringDeque s_d = {"with", "vector", "and", "deque", "for", "type", "string"};
-
-	concatenation<StringVector, StringDeque> conc(s_v, s_d);
-	auto first_I = std::find(conc.begin(), conc.end(), "I");
-	auto first_for = std::find(conc.begin(), conc.end(), "for");
-
-	StringVector correct{"I", "am", "testing", "concatenation", "with", "vector", "and", "deque"};
-	StringVector result;
-	std::copy(first_I, first_for, back_inserter(result));
-
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy) (" + correct.at(i) + " != " + result.at(i) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	StringVector correct2{"hello", "I", "am", "testing", "concatenation", "with", "vector", "and", "deque", "for", "type", "string"};
-	int i = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it, ++i)
-	{
-		if(correct2.at(i) != *it)
-		{
-			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	}
-
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-	
-
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_array_int()
-{
-	string name = "test_array_int";
-	using IntArray = array<int, 8>;
-
-	IntArray a1 = {1,2,3,4,5,6,7,8};
-	IntArray a2 = {9,10,11,12,13,14,15,16};
-
-	concatenation<IntArray, IntArray> conc(a1, a2);
-
-	auto first6 = std::find(conc.begin(), conc.end(), 6);
-	auto first13 = std::find(conc.begin(), conc.end(), 13);
-
-	vector<int> correct{6,7,8,9,10,11,12};
-	vector<int> result;
-	std::copy(first6, first13, back_inserter(result));
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	} 
-	int i = 0;
-	vector<int> correct2{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-	for(auto it = conc.begin(); it != conc.end(); ++it)
-	{
-		if(correct2.at(i) != *it) 
-		{
-			string s ="(iter " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(*it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(it) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-
-
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_array_string()
-{
-	string name = "test_array_string";
-	using StringArray = array<string, 5>;
-
-	StringArray a1 = {"hello", "I", "am", "testing", "concatenation"};
-	StringArray a2 = {"with", "array", "for", "type", "string"};
-
-	concatenation<StringArray, StringArray> conc(a1, a2);
-
-	auto first_testing = std::find(conc.begin(), conc.end(), "testing");
-	auto first_for = std::find(conc.begin(), conc.end(), "for");
-
-	vector<string> correct{"testing", "concatenation", "with", "array"};
-	vector<string> result;
-	std::copy(first_testing, first_for, back_inserter(result));
-	for(size_t i = 0; i != correct.size(); ++i)
-	{
-		if(correct.at(i) != result.at(i))
-		{
-			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
-			printCell(name, false, s);
-			return false;
-		}
-	} 
-	int i = 0;
-	vector<string> correct2{"hello", "I", "am", "testing", "concatenation", "with", "array", "for", "type", "string"};
-	for(auto it = conc.begin(); it != conc.end(); ++it)
-	{
-		if(correct2.at(i) != *it) 
-		{
-			string s = "(iter " + std::to_string(i) + ") (" + correct.at(i) + " != " + *it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-	i = 0;
-	for(auto it : conc)
-	{
-		if(correct2.at(i) != it)
-		{
-			string s = "(rangefor " + std::to_string(i) + ") (" + correct.at(i) + " != " + it + ")";
-			printCell(name, false, s);
-			return false;
-		}
-		++i;
-	}
-
-
-	printCell(name, true, "");
-	return true;
-}
-
-bool test_array_vector_int()
-{
-
-}
-
-
-int main()
+void test_concatenation()
 {
 	std::cout << "=== TEST CONCATENATION ===================" << endl;
-	bool a = test_vector_int();
-	bool b = test_vector_string();
-	bool c = test_deque_int();
-	bool d = test_deque_string();
-	bool e = test_deque_vector_int();
-	bool f = test_deque_vector_string();
-	bool g = test_array_int();
-	bool h = test_array_string();
-	if(a && b && c && d && e && f && g && h) 
+	using IntVector = vector<int>;
+	using StringVector = vector<string>;
+	using IntDeque = deque<int>;
+	using StringDeque = deque<string>;
+	using IntArray = array<int, 7>;
+	using StringArray = array<string, 5>;
+
+	IntVector i_v1 = {1,2,3,4,5,6,7};
+	IntVector i_v2 = {10,11,12,13,14};
+	StringVector s_v1 = {"this", "is", "a", "test", "for"};
+	StringVector s_v2 = {"concatenation", "on", "string", "container"};
+
+	IntDeque i_d1 = {1,2,3,4,5,6,7};
+	IntDeque i_d2 = {10,11,12,13,14};
+	StringDeque s_d1 = {"this", "is", "a", "test", "for"};
+	StringDeque s_d2 = {"concatenation", "on", "string", "container"};
+	IntDeque find = {5,12};
+
+	IntArray i_a1 = {1,2,3,4,5,6,7};
+	IntArray i_a2 = {10,11,12,13,14};
+	StringArray s_a1 = {"this", "is", "a", "test", "for"};
+	StringArray s_a2 = {"concatenation", "on", "string", "container", "array"};
+
+	int i_find[2] = {5, 13};
+	string s_find[2] = {"a", "on"};
+
+	bool a = test<IntVector, IntVector>("test_vector_int", i_v1, i_v2, i_find);
+	bool b = test<StringVector, StringVector>("test_vector_string", s_v1, s_v2, s_find);
+	bool c = test<IntDeque, IntDeque>("test_deque_int", i_d1, i_d2, i_find);
+	bool d = test<StringDeque, StringDeque>("test_deque_string", s_d1, s_d2, s_find);
+	bool e = test<IntArray, IntArray>("test_array_int", i_a1, i_a2, i_find);
+	bool f = test<StringArray, StringArray>("test_array_string", s_a1, s_a2, s_find);
+	bool g = test<IntVector, IntDeque>("test_vector_deque_int", i_v1, i_d2, i_find);
+	bool h = test<StringVector, StringDeque>("test_vector_deque_string", s_v1, s_d2, s_find);
+	bool i = test<IntVector, IntArray>("test_vector_array_int", i_v1, i_a2, i_find);
+	bool j = test<StringVector, StringArray>("test_vector_array_string", s_v1, s_a2, s_find);
+	bool k = test<IntDeque, IntArray>("test_deque_array_int", i_d1, i_a2, i_find);
+	bool l = test<StringDeque, StringArray>("test_deque_array_string", s_d1, s_a2, s_find);
+
+	if(a && b && c && d && e && f && g && h && i && j && k && l)
 	{
 		cout << "|________________________________________|" << endl;
 		cout << "|            ALL TESTS PASSED            |" << endl;
 	}
 	std::cout << "==========================================" << endl;
+}
+int main()
+{
+	test_concatenation();
 	return 0;
 }
