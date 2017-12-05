@@ -17,9 +17,66 @@ using std::string;
 using std::array;
 using std::vector;
 using std::deque;
+void printCell(string name, bool passed, string why) 
+{
+	string o = "|  ";
+	o += name + ":";
+	int rowi = 0;
+	if(passed)
+	{
+		o += " PASSED";
+	} else 
+	{
+		o += " FAILED";
+	}
+
+	rowi = o.size()-3;
+	while(rowi != 38)
+	{
+		o += " ";
+		++rowi;
+	}
+	o += "|\n|";
+
+	rowi = 0;
+	if(!passed)
+	{
+		o += "    ";
+		for(size_t i = 0; i != why.size(); ++i)
+		{
+			if(i != 0 && i % 33 == 0)
+			{
+				o += "   |\n|  ";
+				rowi = 0;
+			}
+			++rowi;
+			o += why.at(i);
+		}
+		while(rowi != 36)
+		{
+			o += " ";
+			++rowi;
+		}
+		o += "|\n|";
+	}
+	
+
+	
+
+
+	
+	for(int i = 0; i != 40; ++i)
+	{
+		o += "-";
+	}
+	o += "|\n";
+	std::cout << o;
+
+}
 
 bool test_vector_int() 
 {
+	string name = "test_vector_int";
 	using IntVector = vector<int>;
 
 	IntVector i1 = {1,2,3,4,5,6,7,8};
@@ -39,7 +96,8 @@ bool test_vector_int()
 		//cout << result.at(i) << endl;
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_vector_int: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s = "(copy " + std::to_string(i)  + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -50,7 +108,8 @@ bool test_vector_int()
 	{
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_vector_int: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -59,19 +118,21 @@ bool test_vector_int()
 	{
 		if(correct2.at(i) != it)
 		{
-			cout << "test_vector_int: FAILED! (rangefor) (" << correct2.at(i) << " != " << it << ")" << endl;
+			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(it) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 		++i;
 	}
 
 	
-	cout << "test_vector_int: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
 bool test_vector_string()
 {
+	string name = "test_vector_string";
 	using StringVector = vector<string>;
 
 	StringVector s1 = {"this", "is", "a", "test"};
@@ -92,7 +153,8 @@ bool test_vector_string()
 		//cout << result.at(i) << endl;
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_vector_string: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -105,7 +167,9 @@ bool test_vector_string()
 		//std::cout << correct2.at(i) << " = " << *it << endl;
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_vector_string: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
+			printCell(name, false, s);
+			return false;
 		}
 	}
 
@@ -114,17 +178,19 @@ bool test_vector_string()
 	{
 		if(correct2.at(i) != it)
 		{
-			cout << "test_vector_string: FAILED! (rangefor) (" << correct2.at(i) << " != " << it << ")" << endl;
+			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
+			printCell(name, false, s);
 			return false;
 		}
 		++i;
 	}
-	cout << "test_vector_string: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
 bool test_deque_int() 
 {
+	string name = "test_deque_int";
 	using IntDeque = deque<int>;
 
 	IntDeque i1 = {1,2,3,4,5,6,7,8};
@@ -144,7 +210,8 @@ bool test_deque_int()
 		//cout << result.at(i) << endl;
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_deque_int: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s ="(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -155,17 +222,20 @@ bool test_deque_int()
 	{
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_deque_int: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
+			printCell(name, false, s);
+			return false;
 		}
 	}
 
 	
-	cout << "test_deque_int: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
 bool test_deque_string()
 {
+	string name = "test_deque_string";
 	using StringDeque = deque<string>;
 
 	StringDeque s1 = {"this", "is", "a", "test"};
@@ -186,7 +256,8 @@ bool test_deque_string()
 		//cout << result.at(i) << endl;
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_deque_string: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -199,7 +270,9 @@ bool test_deque_string()
 		//std::cout << correct2.at(i) << " = " << *it << endl;
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_deque_string: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
+			printCell(name, false, s);
+			return false;
 		}
 	}
 
@@ -208,18 +281,20 @@ bool test_deque_string()
 	{
 		if(correct2.at(i) != it)
 		{
-			cout << "test_deque_int: FAILED! (rangefor) (" << correct2.at(i) << " != " << it << ")" << endl;
+			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
+			printCell(name, false, s);
 			return false;
 		}
 		++i;
 	}
 
-	cout << "test_deque_string: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
 bool test_deque_vector_int()
 {
+	string name = "test_deque_vector_int";
 	using IntVector = vector<int>;
 	using IntDeque = deque<int>;
 
@@ -239,7 +314,8 @@ bool test_deque_vector_int()
 	{
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_deque_vector_int: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s = "(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -250,7 +326,8 @@ bool test_deque_vector_int()
 	{
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_deque_vector_int: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(*it) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -260,19 +337,21 @@ bool test_deque_vector_int()
 	{
 		if(correct2.at(i) != it)
 		{
-			cout << "test_deque_vector_int: FAILED! (rangefor) (" << correct2.at(i) << " != " << it << ")" << endl;
+			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct2.at(i)) + " != " + std::to_string(it) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 		++i;
 	}
 	
 
-	cout << "test_deque_vector_int: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
 bool test_deque_vector_string()
 {
+	string name = "test_deque_vector_string";
 	using StringVector = vector<string>;
 	using StringDeque = deque<string>;
 
@@ -291,7 +370,8 @@ bool test_deque_vector_string()
 	{
 		if(correct.at(i) != result.at(i))
 		{
-			cout << "test_deque_vector_string: FAILED! (copy) (" << correct.at(i) << " != " << result.at(i) << ")" << endl;
+			string s = "(copy) (" + correct.at(i) + " != " + result.at(i) + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -302,7 +382,8 @@ bool test_deque_vector_string()
 	{
 		if(correct2.at(i) != *it)
 		{
-			cout << "test_deque_vector_string: FAILED! (iter) (" << correct2.at(i) << " != " << *it << ")" << endl;
+			string s = "(iter " + std::to_string(i) + ") (" + correct2.at(i) + " != " + *it + ")";
+			printCell(name, false, s);
 			return false;
 		}
 	}
@@ -312,17 +393,130 @@ bool test_deque_vector_string()
 	{
 		if(correct2.at(i) != it)
 		{
-			cout << "test_deque_vector_string: FAILED! (rangefor) (" << correct2.at(i) << " != " << it << ")" << endl;
+			string s = "(rangefor " + std::to_string(i) + ") (" + correct2.at(i) + " != " + it + ")";
+			printCell(name, false, s);
 			return false;
 		}
 		++i;
 	}
 	
 
-	cout << "test_deque_vector_string: PASSED" << endl;
+	printCell(name, true, "");
 	return true;
 }
 
+bool test_array_int()
+{
+	string name = "test_array_int";
+	using IntArray = array<int, 8>;
+
+	IntArray a1 = {1,2,3,4,5,6,7,8};
+	IntArray a2 = {9,10,11,12,13,14,15,16};
+
+	concatenation<IntArray, IntArray> conc(a1, a2);
+
+	auto first6 = std::find(conc.begin(), conc.end(), 6);
+	auto first13 = std::find(conc.begin(), conc.end(), 13);
+
+	vector<int> correct{6,7,8,9,10,11,12};
+	vector<int> result;
+	std::copy(first6, first13, back_inserter(result));
+	for(size_t i = 0; i != correct.size(); ++i)
+	{
+		if(correct.at(i) != result.at(i))
+		{
+			string s = "(copy " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(result.at(i)) + ")";
+			printCell(name, false, s);
+			return false;
+		}
+	} 
+	int i = 0;
+	vector<int> correct2{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+	for(auto it = conc.begin(); it != conc.end(); ++it)
+	{
+		if(correct2.at(i) != *it) 
+		{
+			string s ="(iter " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(*it) + ")";
+			printCell(name, false, s);
+			return false;
+		}
+		++i;
+	}
+	i = 0;
+	for(auto it : conc)
+	{
+		if(correct2.at(i) != it)
+		{
+			string s = "(rangefor " + std::to_string(i) + ") (" + std::to_string(correct.at(i)) + " != " + std::to_string(it) + ")";
+			printCell(name, false, s);
+			return false;
+		}
+		++i;
+	}
+
+
+	printCell(name, true, "");
+	return true;
+}
+
+bool test_array_string()
+{
+	string name = "test_array_string";
+	using StringArray = array<string, 5>;
+
+	StringArray a1 = {"hello", "I", "am", "testing", "concatenation"};
+	StringArray a2 = {"with", "array", "for", "type", "string"};
+
+	concatenation<StringArray, StringArray> conc(a1, a2);
+
+	auto first_testing = std::find(conc.begin(), conc.end(), "testing");
+	auto first_for = std::find(conc.begin(), conc.end(), "for");
+
+	vector<string> correct{"testing", "concatenation", "with", "array"};
+	vector<string> result;
+	std::copy(first_testing, first_for, back_inserter(result));
+	for(size_t i = 0; i != correct.size(); ++i)
+	{
+		if(correct.at(i) != result.at(i))
+		{
+			string s = "(copy " + std::to_string(i) + ") (" + correct.at(i) + " != " + result.at(i) + ")";
+			printCell(name, false, s);
+			return false;
+		}
+	} 
+	int i = 0;
+	vector<string> correct2{"hello", "I", "am", "testing", "concatenation", "with", "array", "for", "type", "string"};
+	for(auto it = conc.begin(); it != conc.end(); ++it)
+	{
+		if(correct2.at(i) != *it) 
+		{
+			string s = "(iter " + std::to_string(i) + ") (" + correct.at(i) + " != " + *it + ")";
+			printCell(name, false, s);
+			return false;
+		}
+		++i;
+	}
+	i = 0;
+	for(auto it : conc)
+	{
+		if(correct2.at(i) != it)
+		{
+			string s = "(rangefor " + std::to_string(i) + ") (" + correct.at(i) + " != " + it + ")";
+			printCell(name, false, s);
+			return false;
+		}
+		++i;
+	}
+
+
+	printCell(name, true, "");
+	return true;
+}
+
+bool test_array_vector_int()
+{
+
+}
 
 
 int main()
@@ -334,9 +528,11 @@ int main()
 	bool d = test_deque_string();
 	bool e = test_deque_vector_int();
 	bool f = test_deque_vector_string();
-	if(a && b && c && d && e && f) 
+	bool g = test_array_int();
+	bool h = test_array_string();
+	if(a && b && c && d && e && f && g && h) 
 	{
-		cout << " ________________________________________ " << endl;
+		cout << "|________________________________________|" << endl;
 		cout << "|            ALL TESTS PASSED            |" << endl;
 	}
 	std::cout << "==========================================" << endl;
