@@ -1,0 +1,1 @@
+1. Kolla upp hur man ska göra för att std::array ska fungera.
