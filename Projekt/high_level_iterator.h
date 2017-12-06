@@ -9,7 +9,7 @@ template <typename Iterator, typename T1, typename T2>
 class high_level_iterator {
 public:
 	using value_type = typename T1::value_type;
-	using iterator_category = std::input_iterator_tag;
+	using iterator_category = std::forward_iterator_tag;
 	using difference_type = typename T1::difference_type;
 	using pointer = value_type*;
 	using reference = value_type&;
@@ -21,7 +21,7 @@ public:
 	high_level_iterator& operator++(){ ++i; return (*this);};
 	high_level_iterator& operator++(int){auto temp(*this); ++i; return temp;}
 
-	value_type operator*()
+	value_type& operator*()
 	{ 
 		if(i < firstSize)
 		{

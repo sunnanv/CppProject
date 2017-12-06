@@ -8,6 +8,7 @@
 #include <deque>
 
 #include <algorithm>
+#include <numeric>
 
 
 using std::cout;
@@ -186,6 +187,42 @@ bool test(string name, T1& first, T2& second, typename T1::value_type find[])
 	return success;
 }
 
+bool test_write()
+{
+	using IntVector = vector<int>;
+
+	IntVector i_v1 = {10,20,30,40,50,60,70};
+	IntVector i_v2 = {80,90,100,110,120,130};
+
+	concatenation<IntVector, IntVector> conc(i_v1, i_v2);
+
+	IntVector i_v3{140,150,160,170};
+	for(auto i : conc)
+	{
+		std::cout << i << ", ";
+	}
+	std::cout << endl;
+	std::iota(conc.begin(), conc.end(), 1);
+	//int v = 0;
+	for(auto i = conc.begin(); i != conc.end(); ++i)
+	{
+		//*i = v;
+		std::cout << *i << ", ";
+		//++v;
+	}
+	cout << endl;
+
+	IntVector cop{14,15,16,17,18,19};
+	std::copy(cop.begin(), cop.end(), back_inserter(conc));
+	for(auto i : conc)
+	{
+		std::cout << i << ", ";
+	}
+	cout << endl;
+
+	return true;
+}
+
 void test_concatenation()
 {
 	std::cout << "=== TEST CONCATENATION ===================" << endl;
@@ -228,6 +265,7 @@ void test_concatenation()
 	bool k = test<IntDeque, IntArray>("test_deque_array_int", i_d1, i_a2, i_find);
 	bool l = test<StringDeque, StringArray>("test_deque_array_string", s_d1, s_a2, s_find);
 
+	bool m = test_write();
 	if(a && b && c && d && e && f && g && h && i && j && k && l)
 	{
 		cout << "|________________________________________|" << endl;

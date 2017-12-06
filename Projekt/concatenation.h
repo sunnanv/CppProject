@@ -15,8 +15,11 @@ public:
 	iter begin() {return iter(first, second, first->size(), 0);};
 	iter end(){return iter(first, second, first->size(), first->size()+second->size());};
 
-	//iter begin() {return iter(&first[0], &second[0], first->size());};
-	//iter end(){return iter(&first[first->size()], &second[second->size()], first->size()+second->size());};
+	void push_back( const value_type& value )
+	{
+		second->push_back(value);
+	}
+	
 private:
 	T1 *first;
 	T2 *second;
