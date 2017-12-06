@@ -38,10 +38,4 @@ private:
 	T2 *second;
 };
 
-/*template<>
-void concatenation::<std::vector, std::vector>::push_back( const value_type& value)
-{
-
-} */
-
 #endif
