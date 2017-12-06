@@ -187,40 +187,45 @@ bool test(string name, T1& first, T2& second, typename T1::value_type find[])
 	return success;
 }
 
-bool test_write()
+template<typename T1, typename T2>
+bool test_write_int(string name, T1 first, T2 second)
 {
-	using IntVector = vector<int>;
+	bool success = true;
+	string why = "";
+	concatenation<T1, T2> conc(first, second);
 
-	IntVector i_v1 = {10,20,30,40,50,60,70};
-	IntVector i_v2 = {80,90,100,110,120,130};
-
-	concatenation<IntVector, IntVector> conc(i_v1, i_v2);
-
-	IntVector i_v3{140,150,160,170};
-	for(auto i : conc)
+	std::iota(conc.begin(), conc.end(), 0);
+	int i1 = 0;
+	for(auto it = conc.begin(); it != conc.end(); ++it)
 	{
-		std::cout << i << ", ";
+		if(*it != i1)
+		{
+			why = "(iota pos " + std::to_string(i1) + ") (wrong value, was " + std::to_string(*it) + ")";
+			success = false;
+		}
+		++i1;
 	}
-	std::cout << endl;
-	std::iota(conc.begin(), conc.end(), 1);
-	//int v = 0;
-	for(auto i = conc.begin(); i != conc.end(); ++i)
-	{
-		//*i = v;
-		std::cout << *i << ", ";
-		//++v;
-	}
-	cout << endl;
 
-	IntVector cop{14,15,16,17,18,19};
-	std::copy(cop.begin(), cop.end(), back_inserter(conc));
-	for(auto i : conc)
+	if(success)
 	{
-		std::cout << i << ", ";
+		vector<int> cop{100,99,98,97,96,95};
+		auto noncop = std::find(conc.begin(), conc.end(), 6);
+		std::copy(cop.begin(), cop.end(), conc.begin());
+		std::copy(noncop, conc.end(), back_inserter(cop));
+		int i2 = 0;
+		for(auto i : conc)
+		{
+			if(cop.at(i2) != i)
+			{
+				why = "(copy, pos " + std::to_string(i2) + ") (wrong value, expected: " + std::to_string(cop.at(i2)) + ", was " + std::to_string(i) + ")";
+				success = false;
+			}
+			++i2;
+		}
 	}
-	cout << endl;
 
-	return true;
+	printCell(name, success, why);
+	return success;
 }
 
 void test_concatenation()
@@ -265,8 +270,12 @@ void test_concatenation()
 	bool k = test<IntDeque, IntArray>("test_deque_array_int", i_d1, i_a2, i_find);
 	bool l = test<StringDeque, StringArray>("test_deque_array_string", s_d1, s_a2, s_find);
 
-	bool m = test_write();
-	if(a && b && c && d && e && f && g && h && i && j && k && l)
+	bool m = test_write_int<IntVector, IntVector>("test_write_vector_int", i_v1, i_v2);
+	bool n = test_write_int<IntDeque, IntDeque>("test_write_deque_int", i_d1, i_d2);
+	bool o = test_write_int<IntArray, IntArray>("test_write_array_int", i_a1, i_a2);
+	bool p = test_write_int<IntVector, IntDeque>("test_write_vector_deque_int", i_v1, i_d2);
+	bool q = test_write_int<IntVector, IntArray>("test_write_vector_array_int", i_v1, i_a2);
+	if(a && b && c && d && e && f && g && h && i && j && k && l && m && n && o && p && q)
 	{
 		cout << "|________________________________________|" << endl;
 		cout << "|            ALL TESTS PASSED            |" << endl;

@@ -51,6 +51,8 @@ public:
 			return &((*second)[i]);
 		}
 	}
+
+	
 private:
 	T1* first;
 	T2* second;
