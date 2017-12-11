@@ -48,8 +48,9 @@ IntArray i_a2 = {10,11,12,13,14};
 StringArray s_a1 = {"this", "is", "a", "test", "for"};
 StringArray s_a2 = {"ett eller ett ett", "on", "string", "container", "array"};
 
-
-
+/*
+ * Help methods for printing to console.
+ */
 void printTitle(string name)
 {
 	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
@@ -119,11 +120,18 @@ std::string toString(T& in)
 	return rtrn.str();
 }
 
-/* Template method for testing std::copy, iterator and rangefor */
+
+
+/* Template struct for testing */
 template<typename T1, typename T2>
 struct test {
 
-
+	/* Tests the iterator. 
+	 * Tests finding items in the concatenation and then copying from it.
+	 * Tests normal iteration through the concatenation (auto it = conc.begin(); it != conc.end(); ++it)
+	 * Tests rangefor-iteration (auto it : conc)
+	 * Tests backwards iteration (--it)
+	 */
 	bool iterator(string name, T1& first, T2& second, typename T1::value_type find[])
 	{
 		bool success = true;
@@ -235,6 +243,10 @@ struct test {
 		return success;
 	}
 
+	/* Test for writing to the concatenation.
+	 * Tests writing with iota
+	 * Tests copying to the concatenation
+	 */
 	bool write_int(string name, T1 first, T2 second)
 	{
 		bool success = true;
@@ -279,6 +291,11 @@ struct test {
 		return success;
 	}
 
+	/* Test sorting the concatenation
+	 * Tests sorting from smallest to largest.
+	 * Tests sorting from largest to smallest.
+	 * Tests reversing the concatenation.
+	 */
 	bool sort(string name, T1 first, T2 second)
 	{
 		
@@ -356,6 +373,13 @@ struct test {
 		return success;
 	}
 
+	/* Test for constant concatenation
+	 * Tests so cbegin() and begin() on non-const concatenation is not the same type.
+	 * Tests so cbegin() and begin() on const concatenation is of the same type.
+	 * Tests so begin() on const concatenation is not the same type as begin() on non-const.
+	 * Tests copy from const concatenation + rangefor-iteration.
+	 * Tests normal iterator over constant concatenation.
+	 */
 	bool constCont(string name, T1 first, T2 second, typename T1::value_type find[])
 	{
 
@@ -437,8 +461,108 @@ struct test {
 		printFail(why);
 		return success;
 	}
+
+	bool operators(string name, T1 first, T2 second)
+	{
+		bool success = true;
+		string why = "";
+		vector<typename T1::value_type> correct;
+		using type = typename T1::value_type;
+		std::copy(first.begin(), first.end(), back_inserter(correct));
+		std::copy(second.begin(), second.end(), back_inserter(correct));
+
+		concatenation<T1, T2> conc(first, second);
+		auto i1 = conc.begin();
+		auto i1_c = correct.begin();
+
+		++i1;
+		++i1_c;
+
+		if(*i1 != *i1_c)
+		{
+			why = "(pre ++ operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
+		i1 += 3;
+		i1_c += 3;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(+= operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
+		auto i2 = i1 + 2;
+		auto i2_c = i1_c + 2;
+
+		if(success && *i2 != *i2_c)
+		{
+			why = "(+ operator) (" + toString<type>(*i2) + " != " + toString(*i2_c);
+			success = false;
+		}
+
+		--i2;
+		--i2_c;
+
+		if(success && *i2 != *i2_c)
+		{
+			why = "(pre -- operator) (" + toString<type>(*i2) + " != " + toString(*i2_c);
+			success = false;
+		}
+
+		i1 = i2 - 3;
+		i1_c = i2_c - 3;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(- or = operator) (" + toString<type>(*i2) + " != " + toString(*i2_c);
+			success = false;
+		}
+
+
+		i1--;
+		i1_c--;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(post -- operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
+		i1++;
+		i1_c++;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(post ++ operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
+		auto low = conc.begin() + 3;
+		auto high = conc.end() - 4;
+		auto low2 = conc.begin() +3;
+
+		if(success && !(low < high)) {why = "(< operator)"; success = false;}
+		if(success && (low > high)) {why = "(> operator)"; success = false;}
+		if(success && !(low <= high) && !(low <= low2)) {why = "(<= operator)"; success = false;}
+		if(success && (low >= high) && !(low >= low2)) {why = "(>= operator)"; success = false;}
+		if(success && (low == high) && !(low == low2)) {why = "(== operator)"; success = false;}
+		if(success && !(low != high) && (low != low2)) {why = "(!= operator)"; success = false;}
+
+		if(i2-i1 != i2_c-i1_c) {why = ("iterator-iterator operator"); success = false;}
+
+
+		printTest(name, success);
+		printFail(why);
+		return success;
+
+	}
 };
 
+/**
+ * Template method for testing different variations of containers
+ */
 template <typename T1_int, typename T1_string, typename T2_int, typename T2_string>
 void container_test(string name, int& total, int& successful)
 {
@@ -456,7 +580,9 @@ void container_test(string name, int& total, int& successful)
 	test_result.push_back(t_i.sort("test_sort_int", T1_i, T2_i));
 	test_result.push_back(t_s.sort("test_sort_string", T1_s, T2_s));
 	test_result.push_back(t_i.constCont("test_const_int", T1_i, T2_i, i_find)); 
-	test_result.push_back(t_i.constCont("test_const_string", T1_i, T2_i, i_find)); 
+	test_result.push_back(t_i.constCont("test_const_string", T1_i, T2_i, i_find));
+	test_result.push_back(t_i.operators("test_operators_int", T1_i, T2_i));
+	test_result.push_back(t_s.operators("test_operators_string", T1_s, T2_s));
 	int success = std::count(test_result.begin(), test_result.end(), true);
 
 	total += test_result.size();

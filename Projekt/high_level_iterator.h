@@ -2,29 +2,33 @@
 #define HIGH_LEVEL_ITERATOR_H
 
 #include <iterator>
-#include <iostream>
-#include <climits>
-//#include <conditional>
-#include <type_traits>
 
 template <typename T1, typename T2>
 class high_level_iterator {
 public:
-	using value_type = typename T1::value_type;//typename std::conditional<std::is_const<typename T1::value_type>::value, const typename T1::value_type, T1::value_type>::type;
+	using value_type = typename T1::value_type;
 	using iterator_category = std::bidirectional_iterator_tag;
 	using difference_type = typename T1::difference_type;
 	using pointer = typename std::conditional<std::is_const<T1>::value, const value_type*, value_type*>::type;
 	using reference = typename std::conditional<!std::is_const<T1>::value, value_type&, const value_type&>::type;
 
 
+	/**
+	 * Constructs an iterator over two containers.
+	 * 
+	 * @param f the first container to iterate over
+	 * @param s the second container to iterate over
+	 */
 	high_level_iterator(T1* f, T2* s, unsigned int fsize, unsigned int start=0): 
 	first{f}, second{s}, firstSize{fsize}, i{start}{}
-	high_level_iterator(const high_level_iterator& c) = default;
-
 	~high_level_iterator(){}
 
-	high_level_iterator<T1, T2>& operator=(const high_level_iterator<T1, T2>& c) = default;
-	high_level_iterator<T1, T2>& operator=(high_level_iterator<T1, T2>& c)
+	/**
+	 * Assignment operator.
+	 * @param c Iterator to assign from
+	 * @return a reference to this iterator.
+	 */
+	high_level_iterator<T1, T2>& operator=(const high_level_iterator<T1, T2>& c)
 	{
 		first = (c.first);
 		second = (c.second);
@@ -33,16 +37,63 @@ public:
 		return (*this);
 	}
 
+	/**
+	 * Prefix increment operator.
+	 * @return a reference to this incremented iterator.
+	 */
 	high_level_iterator<T1, T2>& operator++(){ ++i; return (*this);};
-	high_level_iterator<T1, T2>& operator++(int){auto temp(*this); ++i; return temp;}
+	/**
+	 * Postfix increment operator.
+	 * @return a reference to this iterator before increment.
+	 */
+	high_level_iterator<T1, T2> operator++(int){auto temp(*this); ++i; return temp;}
 
+	/**
+	 * Prefix decrement operator.
+	 * @return a reference to this decremented iterator.
+	 */
 	high_level_iterator<T1, T2>& operator--(){ --i; return (*this);};
-	high_level_iterator<T1, T2>& operator--(int){ auto temp(*this); --i; return temp;};
 
+	/**
+	 * Postfix decrement operator.
+	 * @return a reference to this iterator before decrement.
+	 */
+	high_level_iterator<T1, T2> operator--(int){ auto temp(*this); --i; return temp;};
+
+	/**
+	 * Addition assignment operator. Allows incrementing multiple steps in constant time.
+	 * @param rhs the amount of steps to go forward (the right hand side of +=)
+	 * @return a reference to this iterator after increment
+	 */
 	high_level_iterator<T1, T2>& operator+=(const difference_type rhs) {i += rhs; return *this;};
+
+	/**
+	 * Subtraction assignment operator. Allows decrementeing multiple steps in constant time.
+	 * @param rhs the amount of steps to go backward (the right hand side of -=)
+	 * @return a reference to this iterator after decrement
+	 */
 	high_level_iterator<T1, T2>& operator-=(const difference_type rhs) {i -= rhs; return *this;};
+
+	/**
+	 * Addition operator. Allows assigning auto a = iterator + 5
+	 * @param rhs the amount of steps to increment from this one.
+	 * @return a new high_level_iterator incremented rhs steps from this one.
+	 */
 	high_level_iterator<T1, T2> operator+(const difference_type rhs) const {high_level_iterator<T1, T2> temp = *this; temp += rhs; return temp;};
+	
+	/**
+	 * Subtraction operator. Allows assigning auto a = iterator - 5
+	 * @param rhs the amount of steps to decrement from this one.
+	 * @return a new high_level_iterator decremented rhs steps from this one.
+	 */
 	high_level_iterator<T1, T2> operator-(const difference_type rhs) const {high_level_iterator<T1, T2> temp = *this; temp -= rhs; return temp;};
+	
+	/**
+	 * Addition operator. Allows assigning auto a = 5 + iterator
+	 * @param lhs the amount of steps to increment from this one.
+	 * @param rhs the iterator to increment from (this one)
+	 * @return a new high_level_iterator incremented lhs steps from this one
+	 */
 	friend high_level_iterator<T1, T2> operator+(difference_type lhs, const high_level_iterator<T1, T2>& rhs) 
 	{
 		high_level_iterator<T1, T2> temp = rhs;
@@ -50,61 +101,69 @@ public:
 		return temp;
 	}
 
-	difference_type operator-(const high_level_iterator<T1, T2>& rhs) const {return i-rhs.i;}
+	/**
+	 * Distance operator. Gives the distance between this iterator and an other.
+	 * @param rhs Iterator to calcuate distance from.
+	 * @return the distance between this iterator and rhs.
+	 */
+	difference_type operator-(const high_level_iterator<T1, T2>& rhs) const {return i-rhs.i;};
+
+	/**
+	 * Reference operator. Makes it possible to get the value from the iterator (*iterator)
+	 * @return A reference to the value this iterator is pointing to
+	 */
 	reference operator*()
 	{ 
 		if(i < firstSize)
 		{
 			return (*first)[i]; 
-		} else// if( i < (firstSize + second->size()))
+		} else
 		{
 			return (*second)[i-firstSize]; 
-		} //else {
-			//return *second->end();
-		//}
-	};
-
-	/*const value_type& operator*() const
-	{ 
-		if(i < firstSize)
-		{
-			const value_type& cref = (*first)[i];
-
-			return cref; 
-		} else// if( i < (firstSize + second->size()))
-		{
-			const value_type& cref = (*second)[i];
-			return cref;
-			//return std::const_cast<const reference>((*second)[i-firstSize]); 
-		} //else {
-			//return *second->end();
-		//}
-	}; */
-
-	bool operator==(const high_level_iterator<T1, T2>& rhs) 
-	{
-		return i == rhs.i; 
-	}
-	bool operator!=(const high_level_iterator<T1, T2>& rhs) 
-	{ 
-		return i != rhs.i;
-	}
-
-	bool operator<(const high_level_iterator<T1, T2>& rhs){return i<rhs.i;};
-	bool operator>(const high_level_iterator<T1, T2>& rhs){return i>rhs.i;};
-	bool operator<=(const high_level_iterator<T1, T2>& rhs){return i<=rhs.i;};
-	bool operator>=(const high_level_iterator<T1, T2>& rhs){return i>=rhs.i;};
-
-	pointer getV() const
-	{
-		if(i < firstSize)
-		{
-			return &((*first)[i]);
-		} else 
-		{
-			return &((*second)[i]);
 		}
 	}
+
+	/**
+	 * Equals operator. Allows comparing this iterator to another.
+	 * @param rhs the iterator to compare to
+	 * @return true if they are equal, otherwise false.
+	 */
+	bool operator==(const high_level_iterator<T1, T2>& rhs) {return i == rhs.i;};
+
+	/**
+	 * Not-equals operator. Allows comparing this iterator to another.
+	 * @param rhs the iterator to compare to
+	 * @return true if they are not equal, otherwise false.
+	 */
+	bool operator!=(const high_level_iterator<T1, T2>& rhs) { return i != rhs.i;};
+
+	/**
+	 * Less-than operator. Allows comparing this iterator with another to see which one is first (lesser)
+	 * @param rhs Iterator to compare to.
+	 * @return true if this iterator is less than rhs, else false.
+	 */
+	bool operator<(const high_level_iterator<T1, T2>& rhs){return i<rhs.i;};
+
+	/**
+	 * Greater-than operator. Allows comparing this iterator with another to see which one is last (greater)
+	 * @param rhs Iterator to compare to.
+	 * @return true if this iterator is greater than rhs, else false.
+	 */
+	bool operator>(const high_level_iterator<T1, T2>& rhs){return i>rhs.i;};
+
+	/**
+	 * Lesser-than-or-equal operator. Allows comparing this iterator with another to see which one is first (lesser)
+	 * @param rhs Iterator to compare to.
+	 * @return true if this iterator is lesser than or equal to rhs, else false.
+	 */
+	bool operator<=(const high_level_iterator<T1, T2>& rhs){return i<=rhs.i;};
+
+	/**
+	 * Greater-than-or-equal operator. Allows comparing this iterator with another to see which one is last (greater)
+	 * @param rhs Iterator to compare to.
+	 * @return true if this iterator is greater than or equal to rhs, else false.
+	 */
+	bool operator>=(const high_level_iterator<T1, T2>& rhs){return i>=rhs.i;};
 
 
 private:
@@ -112,7 +171,6 @@ private:
 	T2* second;
 	unsigned int firstSize;
 	unsigned int i;
-	//value_type last;
 };
 
 
