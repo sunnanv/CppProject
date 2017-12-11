@@ -1,1 +1,5 @@
 1. Kolla upp hur man ska göra för att std::array ska fungera.
+
+
+
+struct, specika testmetoder (test_array, test_vector), print för title, fel och antal success/total

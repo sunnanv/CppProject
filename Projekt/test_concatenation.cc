@@ -7,6 +7,8 @@
 #include <vector>
 #include <deque>
 
+#include <typeinfo>
+
 #include <algorithm>
 #include <numeric>
 
@@ -16,270 +18,497 @@ using std::endl;
 
 using std::string;
 
-using std::array;
 using std::vector;
+using std::array;
 using std::deque;
-void printCell(string name, bool passed, string why) 
+
+using IntVector = std::vector<int>;
+using StringVector = std::vector<string>;
+using IntDeque = std::deque<int>;
+using StringDeque = std::deque<string>;
+using IntArray = std::array<int, 7>;
+using StringArray = std::array<string, 5>;
+
+int i_find[2] = {5, 13};
+string s_find[2] = {"a", "on"};
+
+IntVector i_v1 = {1,2,3,4,5,6,7};
+IntVector i_v2 = {10,11,12,13,14};
+StringVector s_v1 = {"this", "is", "a", "test", "for"};
+StringVector s_v2 = {"ett eller ett ett", "on", "string", "container"};
+
+IntDeque i_d1 = {1,2,3,4,5,6,7};
+IntDeque i_d2 = {10,11,12,13,14};
+StringDeque s_d1 = {"this", "is", "a", "test", "for"};
+StringDeque s_d2 = {"ett eller ett ett", "on", "string", "container"};
+IntDeque find = {5,12};
+
+IntArray i_a1 = {1,2,3,4,5,6,7};
+IntArray i_a2 = {10,11,12,13,14};
+StringArray s_a1 = {"this", "is", "a", "test", "for"};
+StringArray s_a2 = {"ett eller ett ett", "on", "string", "container", "array"};
+
+
+
+void printTitle(string name)
 {
-	std::stringstream ss;
-	/* Create first row */
-	ss << "|  " << name << ":";
-	int rowi = 0;
-	if(passed)
+	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+	string s = "|" + name + ":";
+	s.append(41-s.size(),' ');
+	cout << s + "|\n";
+}
+
+void printTest(string name, bool passed)
+{
+	string s = "|  " + name + ":";
+	s.append(passed? " PASSED" : " FAILED");
+	s.append(41-s.size(), ' ');
+	cout << s + "|\n";
+}
+
+void printFail(string why)
+{
+	if(why == "") return;
+	string s = "|      ";
+	int pos = 0;
+	int remain = why.size();
+	while(remain >= 31)
 	{
-		ss << " PASSED";
-	} else 
+		s.append(why, pos, 31);
+		s.append("   |\n|      ");
+		remain -= 31;
+		pos += 31;
+	}
+	if(remain > 0)
 	{
-		ss << " FAILED";
+		s.append(why, pos, 31);
+		s.append(31	-remain, ' ');
+		s.append("   |\n|      ");
 	}
 
-	/* fill with blankspace */
-	rowi = ss.str().size()-3;
-	while(rowi != 38)
-	{
-		ss.put(' ');
-		++rowi;
-	}
-	ss << "|\n|";
+	s.erase(s.size()-7);
+	std::cout << s;
 
-	/* If not passed, output why */
-	rowi = 0;
-	if(!passed)
-	{
-		ss << "    ";
-		for(size_t i = 0; i != why.size(); ++i)
-		{
-			if(i != 0 && i % 33 == 0)
-			{
-				ss << "   |\n|    ";
-				rowi = 0;
-			}
-			++rowi;
-			ss.put(why.at(i));
-		}
-		while(rowi != 36)
-		{
-			ss.put(' ');
-			++rowi;
-		}
-		ss << "|\n|";
-	}
+}
+void printEnd(int total, int success)
+{
+	string s = "|";
+	s.append(40, '-');
+	s.append("|\n|");
+	int tsize = total > 9? 2 : 1;
+	int ssize = success > 9? 2 : 1;
 
-	/* Ending line */
-	for(int i = 0; i != 40; ++i)
-	{
-		ss.put('-');
-	}
-	ss << "|\n";
+	int half = (22-tsize-ssize)/2;
+	s.append(half, ' ');
+	s.append(std::to_string(success) + "/" + std::to_string(total) + " tests successful");
+	s.append(half, ' ');
+	s.append("|\n");
 
-	std::cout << ss.str();
+	s.append("|");
+	s.append(40, '-');
+	s.append("|");
+
+	std::cout << s + "\n";
+}
+
+template<typename T>
+std::string toString(T& in)
+{
+	std::stringstream rtrn;
+	rtrn << std::noskipws << in;
+	return rtrn.str();
 }
 
 /* Template method for testing std::copy, iterator and rangefor */
 template<typename T1, typename T2>
-bool test(string name, T1& first, T2& second, typename T1::value_type find[])
-{
-	bool success = true;
-	string why = "";
-	concatenation<T1, T2> conc(first, second);
-
-	/* Get the correct elements and put them in T1 containers
-	 * for checking during test */
-	vector<typename T1::value_type> correct_full;
-	std::copy(first.begin(), first.end(), back_inserter(correct_full));
-	std::copy(second.begin(), second.end(), back_inserter(correct_full));
-
-	auto start_c = std::find(correct_full.begin(), correct_full.end(), find[0]);
-	auto stop_c = std::find(correct_full.begin(), correct_full.end(), find[1]);
-	vector<typename T1::value_type> correct_part;
-	std::copy(start_c, stop_c, back_inserter(correct_part));
+struct test {
 
 
-	/* Test if copy is working */
-	auto start = std::find(conc.begin(), conc.end(), find[0]);
-	auto stop = std::find(conc.begin(), conc.end(), find[1]);
-
-	vector<typename T1::value_type> result;
-	std::copy(start, stop, std::back_inserter(result));
-	size_t i1;
-	for(i1 = 0; i1 != correct_part.size(); ++i1)
+	bool iterator(string name, T1& first, T2& second, typename T1::value_type find[])
 	{
-		//cout << result.at(i) << endl;
-		if(correct_part.at(i1) != result.at(i1))
-		{
-			string a, b;
-			std::ostringstream ss1;
-			std::ostringstream ss2;
-			ss1 << result.at(i1);
-			ss2 << correct_part.at(i1);
-			a = ss1.str();
-			b = ss2.str();
-			why = "(copy " + std::to_string(i1)  + ") (" + a + " != " + b + ")";
-			success = false;
-		}
-	}
+		bool success = true;
+		string why = "";
+		concatenation<T1, T2> conc(first, second);
 
-	size_t i2 = 0;
-	if(success)
-	{
-		/* Test normal iteration */
-		for(auto it = conc.begin(); it != conc.end(); ++it, ++i2)
+		/* Get the correct elements and put them in T1 containers
+		 * for checking during test */
+		vector<typename T1::value_type> correct_full;
+		std::copy(first.begin(), first.end(), back_inserter(correct_full));
+		std::copy(second.begin(), second.end(), back_inserter(correct_full));
+
+		auto start_c = std::find(correct_full.begin(), correct_full.end(), find[0]);
+		auto stop_c = std::find(correct_full.begin(), correct_full.end(), find[1]);
+		vector<typename T1::value_type> correct_part;
+		std::copy(start_c, stop_c, back_inserter(correct_part));
+
+
+		/* Test if copy is working */
+		auto start = std::find(conc.begin(), conc.end(), find[0]);
+		auto stop = std::find(conc.begin(), conc.end(), find[1]);
+
+		vector<typename T1::value_type> result;
+		std::copy(start, stop, std::back_inserter(result));
+		size_t i1;
+		for(i1 = 0; i1 != correct_part.size(); ++i1)
 		{
-			if(correct_full.at(i2) != *it)
+			if(correct_part.at(i1) != result.at(i1))
 			{
-			    string a, b;
-			    std::ostringstream ss1;
-				std::ostringstream ss2;
-				ss1 << *it;
-				ss2 << correct_full.at(i2);
-				a = ss1.str();
-				b = ss2.str();
-
-				why = "(iter " + std::to_string(i2) + ") (" + a + " != " + b + ")";
+				string a = toString<typename T1::value_type>(result.at(i1));
+				string b = toString<typename T1::value_type>(correct_part.at(i1));
+				why = "(copy " + toString<size_t>(i1)  + ") (" + a + " != " + b + ")";
 				success = false;
+				break;
 			}
 		}
-	}
 
-	size_t i3 = 0;
-	if(success)
-	{
-		/* Test rangefor iteration */
-		for(auto it : conc)
+		size_t i2 = 0;
+		if(success)
 		{
-			if(correct_full.at(i3) != it)
+			/* Test normal iteration */
+			for(auto it = conc.begin(); it != conc.end(); ++it, ++i2)
 			{
-				string a, b;
-				std::ostringstream ss1;
-				std::ostringstream ss2;
-				ss1 << it;
-				ss2 << correct_full.at(i2);
-				a = ss1.str();
-				b = ss2.str();
-
-				why = "(rangefor " + std::to_string(i3) + ") (" + a + " != " + b + ")";
-				success = false;
+				if(correct_full.at(i2) != *it)
+				{
+					string a = toString<typename T1::value_type>(*it);
+					string b = toString<typename T1::value_type>(correct_full.at(i2));
+					why = "(iter " + std::to_string(i2) + ") (" + a + " != " + b + ")";
+					success = false;
+					break;
+				}
 			}
-			++i3;
 		}
-	}
 
-	
-	/* Check if everything is gone through */
-	if(success && i1 != correct_part.size())
-	{
-		why = "(copy) (wrong amount of elements accessed, should be " + std::to_string(correct_part.size()) + ", is " + std::to_string(i1) + ")"; 
-		success = false;
-	}
-	if(success && i2 != correct_full.size())
-	{
-		why = "(iter) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i2) + ")"; 
-		success = false;
-	}
-	if(success && i3 != correct_full.size())
-	{
-		why = "(rangefor) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i3) + ")"; 
-		success = false;
-	}
-
-	
-	printCell(name, success, why);
-	return success;
-}
-
-template<typename T1, typename T2>
-bool test_write_int(string name, T1 first, T2 second)
-{
-	bool success = true;
-	string why = "";
-	concatenation<T1, T2> conc(first, second);
-
-	std::iota(conc.begin(), conc.end(), 0);
-	int i1 = 0;
-	for(auto it = conc.begin(); it != conc.end(); ++it)
-	{
-		if(*it != i1)
+		size_t i3 = 0;
+		if(success)
 		{
-			why = "(iota pos " + std::to_string(i1) + ") (wrong value, was " + std::to_string(*it) + ")";
+			/* Test rangefor iteration */
+			for(auto it : conc)
+			{
+				if(correct_full.at(i3) != it)
+				{	
+					string a = toString<typename T1::value_type>(it);
+					string b = toString<typename T1::value_type>(correct_full.at(i3));
+					why = "(rangefor " + std::to_string(i3) + ") (" + a + " != " + b + ")";
+					success = false;
+					break;
+				}
+				++i3;
+			}
+		}
+
+		size_t i4 = correct_full.size()-1;
+		if(success)
+		{
+			for(auto it = --conc.end(); it != conc.begin(); --it)
+			{
+				if(correct_full.at(i4) != *it)
+				{
+					string a = toString<typename T1::value_type>(*it);
+					string b = toString<typename T1::value_type>(correct_full.at(i4));
+					why = "(back iter " + std::to_string(i4) + ") ("+ a + " != " + b + ")";
+					success = false;
+					break;
+				}
+				--i4;
+			}
+		}
+
+		/* Check if everything is gone through */
+		if(success && i1 != correct_part.size())
+		{
+			why = "(copy) (wrong amount of elements accessed, should be " + std::to_string(correct_part.size()) + ", is " + std::to_string(i1) + ")"; 
 			success = false;
 		}
-		++i1;
+		if(success && i2 != correct_full.size())
+		{
+			why = "(iter) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i2) + ")"; 
+			success = false;
+		}
+		if(success && i3 != correct_full.size())
+		{
+			why = "(rangefor) (wrong amount of elements accessed, should be " + std::to_string(correct_full.size()) + ", is " + std::to_string(i3) + ")"; 
+			success = false;
+		}
+
+		printTest(name, success);
+		printFail(why);
+		return success;
 	}
 
-	if(success)
+	bool write_int(string name, T1 first, T2 second)
 	{
-		vector<int> cop{100,99,98,97,96,95};
-		auto noncop = std::find(conc.begin(), conc.end(), 6);
-		std::copy(cop.begin(), cop.end(), conc.begin());
-		std::copy(noncop, conc.end(), back_inserter(cop));
-		int i2 = 0;
+		bool success = true;
+		string why = "";
+		concatenation<T1, T2> conc(first, second);
+
+		/* Test writing to concatenation with iota (0,1,2,3,4,...)*/
+		std::iota(conc.begin(), conc.end(), 0);
+		int i1 = 0;
+		for(auto it = conc.begin(); it != conc.end(); ++it)
+		{
+			if(*it != i1)
+			{
+				why = "(iota pos " + std::to_string(i1) + ") (wrong value, expected " + std::to_string(i1) + ", was " + std::to_string(*it) + ")";
+				success = false;
+				break;
+			}
+			++i1;
+		}
+
+		if(success)
+		{
+			/* Test writing to concatenation with copy (100,99,98,97,96,95) */
+			vector<int> cop{100,99,98,97,96,95};
+			auto noncop = std::find(conc.begin(), conc.end(), 6);
+			std::copy(cop.begin(), cop.end(), conc.begin());
+			std::copy(noncop, conc.end(), back_inserter(cop));
+			int i2 = 0;
+			for(auto i : conc)
+			{
+				if(cop.at(i2) != i)
+				{
+					why = "(copy, pos " + std::to_string(i2) + ") (wrong value, expected: " + std::to_string(cop.at(i2)) + ", was " + std::to_string(i) + ")";
+					success = false;
+					break;
+				}
+				++i2;
+			}
+		}
+		printTest(name, success);
+		printFail(why);
+		return success;
+	}
+
+	bool sort(string name, T1 first, T2 second)
+	{
+		
+		bool success = true;
+		string why = "";
+
+		vector<typename T1::value_type> correct_full;
+		using type = typename T1::value_type;
+		std::copy(first.begin(), first.end(), back_inserter(correct_full));
+		std::copy(second.begin(), second.end(), back_inserter(correct_full));
+
+		concatenation<T1, T2> conc(first, second);
+
+		/* Test sorting concatenation with std::less (1,2,3,....) */
+		std::sort(correct_full.begin(), correct_full.end(), std::less<type>());
+		std::sort(conc.begin(), conc.end(), std::less<type>());
+
+		int i1 = 0;
 		for(auto i : conc)
 		{
-			if(cop.at(i2) != i)
+			if(correct_full.at(i1) != i)
 			{
-				why = "(copy, pos " + std::to_string(i2) + ") (wrong value, expected: " + std::to_string(cop.at(i2)) + ", was " + std::to_string(i) + ")";
+				string a = toString<type>(i);
+				string b = toString<type>(correct_full.at(i1));
+				why = "(sort less " + std::to_string(i1) + ") (" + a + " != " + b + ")";
 				success = false;
+				break;
 			}
-			++i2;
+			++i1;
 		}
+
+		int i2 = 0;
+		if(success)
+		{
+			/* Test sorting concatenation with std::greater (20, 19, 18, ...) */
+			std::sort(correct_full.begin(), correct_full.end(), std::greater<type>());
+			std::sort(conc.begin(), conc.end(), std::greater<type>());
+			for(auto i : conc)
+			{
+				if(correct_full.at(i2) != i)
+				{
+					string a = toString<type>(i);
+					string b = toString<type>(correct_full.at(i2));
+					why = "(sort greater " + std::to_string(i2) + ") (" + a + " != " + b + ")";
+					success = false;
+					break;
+				}
+				++i2;
+			}
+		}
+
+		int i3 = 0;
+		if(success)
+		{
+			/* Test reversing concatenation */
+			std::reverse(conc.begin(), conc.end());
+			std::reverse(correct_full.begin(), correct_full.end());
+			for(auto i : conc)
+			{
+				if(correct_full.at(i3) != i)
+				{
+					string a = toString<type>(i);
+					string b = toString<type>(correct_full.at(i3));
+					why = "(reverse " + std::to_string(i3) + ") (" + a + " != " + b + ")";
+					success = false;
+					break;
+				}
+				++i3;
+			}
+
+		} 
+
+		printTest(name, success);
+		printFail(why);
+		return success;
 	}
 
-	printCell(name, success, why);
-	return success;
+	bool constCont(string name, T1 first, T2 second, typename T1::value_type find[])
+	{
+
+		vector<typename T1::value_type> correct_full;
+		std::copy(first.begin(), first.end(), back_inserter(correct_full));
+		std::copy(second.begin(), second.end(), back_inserter(correct_full));
+
+		auto start_c = std::find(correct_full.begin(), correct_full.end(), find[0]);
+		auto stop_c = std::find(correct_full.begin(), correct_full.end(), find[1]);
+		vector<typename T1::value_type> correct_part;
+		std::copy(start_c, stop_c, back_inserter(correct_part));
+
+
+		bool success = true;
+		string why = "";
+		concatenation<T1,T2> conc_nonconst(first, second);
+		concatenation<const T1, const T2> conc(first, second);
+
+		/* Test if non-const begin and cbegin is of the same type (should not be) */
+		if(std::is_same<decltype(conc_nonconst.begin()), decltype(conc_nonconst.cbegin())>::value)
+		{
+			why = "(non-const begin, cbegin) (No difference between nonconst begin() and cbegin())";
+			success = false;
+		}
+		/* Test if const begin and const cbegin is of the same type (should be) */
+		if(success && !std::is_same<decltype(conc.begin()), decltype(conc.cbegin())>::value)
+		{
+			why = "(const begin, cbegin) (begin() and cbegin() is not the same type.";
+			success = false;
+		}
+
+		/* Test if const begin and non-const begin is of the same type (should not be) */
+		if(success && std::is_same<decltype(conc.begin()), decltype(conc_nonconst.begin())>::value)
+		{
+			why = "(const vs non-const begin) (Same type between const and non-const begin()";
+		}
+
+
+		int i1 = 0;
+		if(success)
+		{
+			/* Test copy from const container + foreach */
+			auto start = std::find(conc.begin(), conc.end(), find[0]);
+			auto end = std::find(conc.begin(), conc.end(), find[1]);
+			vector<typename T1::value_type> result;
+			std::copy(start, end, back_inserter(result));
+
+			for(auto i : result)
+			{
+				if(i != correct_part.at(i1))
+				{
+					why = "(copy, foreach " + std::to_string(i1) + ")";
+					success = false;
+					break;
+				}
+				++i1;
+			}
+		}
+
+		int i2 = 0;
+		if(success)
+		{
+			/* Test normal iterator for const container */
+			for(auto it = conc.begin(); it != conc.end(); ++it)
+			{
+				if(*it != correct_full.at(i2))
+				{
+					why = "(iter " + std::to_string(i2) + ")";
+					success = false;
+					break;
+				}
+				++i2;
+
+			}
+		}
+
+
+		printTest(name, success);
+		printFail(why);
+		return success;
+	}
+};
+
+template <typename T1_int, typename T1_string, typename T2_int, typename T2_string>
+void container_test(string name, int& total, int& successful)
+{
+	vector<bool> test_result;
+	printTitle(name);
+	T1_int T1_i{1,2,3,4,5,6,7};
+	T2_int T2_i{10,11,12,13,14};
+	T1_string T1_s = {"this", "is", "a", "test", "for"};
+	T2_string T2_s = {"concatenated containers", "on", "string", "container"};
+	test<T1_int, T2_int> t_i;
+	test<T1_string, T2_string> t_s; 
+	test_result.push_back(t_i.iterator("test_iterator_int", T1_i, T2_i, i_find));
+	test_result.push_back(t_s.iterator("test_iterator_string", T1_s, T2_s, s_find));
+	test_result.push_back(t_i.write_int("test_write_int", T1_i, T2_i));
+	test_result.push_back(t_i.sort("test_sort_int", T1_i, T2_i));
+	test_result.push_back(t_s.sort("test_sort_string", T1_s, T2_s));
+	test_result.push_back(t_i.constCont("test_const_int", T1_i, T2_i, i_find)); 
+	test_result.push_back(t_i.constCont("test_const_string", T1_i, T2_i, i_find)); 
+	int success = std::count(test_result.begin(), test_result.end(), true);
+
+	total += test_result.size();
+	successful += success;
+
+	printEnd(test_result.size(),success);
+}
+
+template <typename T1_int, typename T1_string>
+void container_test(string name, int& total, int& successful)
+{
+
+	container_test<T1_int, T1_string, T1_int, T1_string>(name, total, successful);
 }
 
 void test_concatenation()
 {
+	using IntVector = std::vector<int>;
+	using StringVector = std::vector<string>;
+	using IntDeque = std::deque<int>;
+	using StringDeque = std::deque<string>;
+	using IntArray = std::array<int, 7>;
+	using StringArray = std::array<string, 5>;
+
 	std::cout << "=== TEST CONCATENATION ===================" << endl;
-	using IntVector = vector<int>;
-	using StringVector = vector<string>;
-	using IntDeque = deque<int>;
-	using StringDeque = deque<string>;
-	using IntArray = array<int, 7>;
-	using StringArray = array<string, 5>;
+	int total{0};
+	int successful{0};
+	container_test<IntVector, StringVector>("test_vector", total, successful);
+	container_test<IntDeque, StringDeque>("test_deque", total, successful);
+	container_test<IntArray, StringArray>("test_array", total, successful);
 
-	IntVector i_v1 = {1,2,3,4,5,6,7};
-	IntVector i_v2 = {10,11,12,13,14};
-	StringVector s_v1 = {"this", "is", "a", "test", "for"};
-	StringVector s_v2 = {"concatenation", "on", "string", "container"};
+	container_test<IntVector, StringVector, IntDeque, StringDeque>("test_vector_deque", total, successful);
+	container_test<IntVector, StringVector, IntArray, StringArray>("test_vector_array", total, successful);
+	container_test<IntDeque, StringDeque, IntArray, StringArray>("test_deque_array", total, successful);
 
-	IntDeque i_d1 = {1,2,3,4,5,6,7};
-	IntDeque i_d2 = {10,11,12,13,14};
-	StringDeque s_d1 = {"this", "is", "a", "test", "for"};
-	StringDeque s_d2 = {"concatenation", "on", "string", "container"};
-	IntDeque find = {5,12};
+	cout << "|________________________________________|" << endl;
+	string s = "|";
+	string fill;
+	fill.append(std::to_string(successful) + "/" + std::to_string(total));
+	fill.append(" TESTS SUCCESSFUL");
+	int fill_size = fill.size();
+	int half = (40-fill_size)/2;
+	string status = "|";
+	status.append(half, ' ');
+	status.append(fill);
+	status.append(fill_size%2 == 0? half : (half+1), ' ');
+	status.append("|\n");
 
-	IntArray i_a1 = {1,2,3,4,5,6,7};
-	IntArray i_a2 = {10,11,12,13,14};
-	StringArray s_a1 = {"this", "is", "a", "test", "for"};
-	StringArray s_a2 = {"concatenation", "on", "string", "container", "array"};
 
-	int i_find[2] = {5, 13};
-	string s_find[2] = {"a", "on"};
 
-	bool a = test<IntVector, IntVector>("test_vector_int", i_v1, i_v2, i_find);
-	bool b = test<StringVector, StringVector>("test_vector_string", s_v1, s_v2, s_find);
-	bool c = test<IntDeque, IntDeque>("test_deque_int", i_d1, i_d2, i_find);
-	bool d = test<StringDeque, StringDeque>("test_deque_string", s_d1, s_d2, s_find);
-	bool e = test<IntArray, IntArray>("test_array_int", i_a1, i_a2, i_find);
-	bool f = test<StringArray, StringArray>("test_array_string", s_a1, s_a2, s_find);
-	bool g = test<IntVector, IntDeque>("test_vector_deque_int", i_v1, i_d2, i_find);
-	bool h = test<StringVector, StringDeque>("test_vector_deque_string", s_v1, s_d2, s_find);
-	bool i = test<IntVector, IntArray>("test_vector_array_int", i_v1, i_a2, i_find);
-	bool j = test<StringVector, StringArray>("test_vector_array_string", s_v1, s_a2, s_find);
-	bool k = test<IntDeque, IntArray>("test_deque_array_int", i_d1, i_a2, i_find);
-	bool l = test<StringDeque, StringArray>("test_deque_array_string", s_d1, s_a2, s_find);
-
-	bool m = test_write_int<IntVector, IntVector>("test_write_vector_int", i_v1, i_v2);
-	bool n = test_write_int<IntDeque, IntDeque>("test_write_deque_int", i_d1, i_d2);
-	bool o = test_write_int<IntArray, IntArray>("test_write_array_int", i_a1, i_a2);
-	bool p = test_write_int<IntVector, IntDeque>("test_write_vector_deque_int", i_v1, i_d2);
-	bool q = test_write_int<IntVector, IntArray>("test_write_vector_array_int", i_v1, i_a2);
-	if(a && b && c && d && e && f && g && h && i && j && k && l && m && n && o && p && q)
-	{
-		cout << "|________________________________________|" << endl;
-		cout << "|            ALL TESTS PASSED            |" << endl;
-	}
+	
+	cout << status;
 	std::cout << "==========================================" << endl;
 }
 int main()
