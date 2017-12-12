@@ -47,6 +47,7 @@ public:
 		return (*this);
 	}
 
+	/* INCREMENT AND DECREMENT OPERATORS */
 	/**
 	 * Prefix increment operator.
 	 * @return a reference to this incremented iterator.
@@ -70,6 +71,8 @@ public:
 	 */
 	high_level_iterator<T1, T2> operator--(int){ auto temp(*this); --i; return temp;};
 
+
+	/* COMPOUND ASSIGNMENT OPERATORS */
 	/**
 	 * Addition assignment operator. Allows incrementing multiple steps in constant time.
 	 * @param rhs the amount of steps to go forward (the right hand side of +=)
@@ -84,6 +87,8 @@ public:
 	 */
 	high_level_iterator<T1, T2>& operator-=(const difference_type rhs) {i -= rhs; return *this;};
 
+
+	/* ARITHMETIC OPERATORS */
 	/**
 	 * Addition operator. Allows assigning auto a = iterator + 5
 	 * @param rhs the amount of steps to increment from this one.
@@ -99,6 +104,13 @@ public:
 	high_level_iterator<T1, T2> operator-(const difference_type rhs) const {high_level_iterator<T1, T2> temp = *this; temp -= rhs; return temp;};
 	
 	/**
+	 * Distance operator. Gives the distance between this iterator and an other.
+	 * @param rhs Iterator to calcuate distance from.
+	 * @return the distance between this iterator and rhs.
+	 */
+	difference_type operator-(const high_level_iterator<T1, T2>& rhs) const {return i-rhs.i;};
+
+	/**
 	 * Addition operator. Allows assigning auto a = 5 + iterator
 	 * @param lhs the amount of steps to increment from this one.
 	 * @param rhs the iterator to increment from (this one)
@@ -111,13 +123,8 @@ public:
 		return temp;
 	}
 
-	/**
-	 * Distance operator. Gives the distance between this iterator and an other.
-	 * @param rhs Iterator to calcuate distance from.
-	 * @return the distance between this iterator and rhs.
-	 */
-	difference_type operator-(const high_level_iterator<T1, T2>& rhs) const {return i-rhs.i;};
 
+	/* REFERENCE OPERATORS */
 	/**
 	 * Reference operator. Makes it possible to get the value from the iterator (*iterator)
 	 * @return A reference to the value this iterator is pointing to
@@ -133,6 +140,7 @@ public:
 		}
 	}
 
+	/* RELATIONAL OPERATORS */
 	/**
 	 * Equals operator. Allows comparing this iterator to another.
 	 * @param rhs the iterator to compare to
