@@ -1,13 +1,22 @@
 #ifndef HIGH_LEVEL_ITERATOR_H
 #define HIGH_LEVEL_ITERATOR_H
-
 #include <iterator>
 
+/** 
+ * An random access iterator class. The high_level_iterator allows 
+ * a user to iterate over two iterators
+ * as if they where one. Does not copy the containers, it uses pointers.\n
+ * T1 and T2 is the types of the containers (e.g vector<int>). They do not have to
+ * be of the same type.
+ */
 template <typename T1, typename T2>
 class high_level_iterator {
 public:
+	/**
+	 * variables that an iterator needs to contain
+	 */
 	using value_type = typename T1::value_type;
-	using iterator_category = std::bidirectional_iterator_tag;
+	using iterator_category = std::random_access_iterator_tag;
 	using difference_type = typename T1::difference_type;
 	using pointer = typename std::conditional<std::is_const<T1>::value, const value_type*, value_type*>::type;
 	using reference = typename std::conditional<!std::is_const<T1>::value, value_type&, const value_type&>::type;
@@ -18,9 +27,10 @@ public:
 	 * 
 	 * @param f the first container to iterate over
 	 * @param s the second container to iterate over
+	 * @param start the position to where the iterator points
 	 */
-	high_level_iterator(T1* f, T2* s, unsigned int fsize, unsigned int start=0): 
-	first{f}, second{s}, firstSize{fsize}, i{start}{}
+	high_level_iterator(T1* f, T2* s, unsigned int start=0): 
+	first{f}, second{s}, firstSize{f->size()}, i{start}{}
 	~high_level_iterator(){}
 
 	/**
@@ -169,7 +179,7 @@ public:
 private:
 	T1* first;
 	T2* second;
-	unsigned int firstSize;
+	size_t firstSize;
 	unsigned int i;
 };
 

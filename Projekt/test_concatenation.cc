@@ -1,3 +1,7 @@
+/**
+ * A class for testing concatenation and high_level_iterator.
+ */
+
 #include "concatenation.h"
 #include <iostream>
 #include <string>
@@ -6,8 +10,6 @@
 #include <array>
 #include <vector>
 #include <deque>
-
-#include <typeinfo>
 
 #include <algorithm>
 #include <numeric>
@@ -22,34 +24,14 @@ using std::vector;
 using std::array;
 using std::deque;
 
-using IntVector = std::vector<int>;
-using StringVector = std::vector<string>;
-using IntDeque = std::deque<int>;
-using StringDeque = std::deque<string>;
-using IntArray = std::array<int, 7>;
-using StringArray = std::array<string, 5>;
-
 int i_find[2] = {5, 13};
 string s_find[2] = {"a", "on"};
 
-IntVector i_v1 = {1,2,3,4,5,6,7};
-IntVector i_v2 = {10,11,12,13,14};
-StringVector s_v1 = {"this", "is", "a", "test", "for"};
-StringVector s_v2 = {"ett eller ett ett", "on", "string", "container"};
 
-IntDeque i_d1 = {1,2,3,4,5,6,7};
-IntDeque i_d2 = {10,11,12,13,14};
-StringDeque s_d1 = {"this", "is", "a", "test", "for"};
-StringDeque s_d2 = {"ett eller ett ett", "on", "string", "container"};
-IntDeque find = {5,12};
-
-IntArray i_a1 = {1,2,3,4,5,6,7};
-IntArray i_a2 = {10,11,12,13,14};
-StringArray s_a1 = {"this", "is", "a", "test", "for"};
-StringArray s_a2 = {"ett eller ett ett", "on", "string", "container", "array"};
-
-/*
- * Help methods for printing to console.
+/**
+ * Help method for printing to console.\n
+ * Prints the title of what you test.
+ * @param name the name of the thing you test (e.g vector)
  */
 void printTitle(string name)
 {
@@ -59,6 +41,12 @@ void printTitle(string name)
 	cout << s + "|\n";
 }
 
+/**
+ * Help method for printing to console.\n
+ * Prints the name of a subtest and if it passed or failed.
+ * @param name the name of the subtest
+ * @param passed true if the subtest passed, else false.
+ */
 void printTest(string name, bool passed)
 {
 	string s = "|  " + name + ":";
@@ -67,6 +55,11 @@ void printTest(string name, bool passed)
 	cout << s + "|\n";
 }
 
+/**
+ * Help method for printing to console.\n
+ * Used if a test fails, and prints out why.
+ * @param why a string describing why the test failed
+ */
 void printFail(string why)
 {
 	if(why == "") return;
@@ -89,8 +82,15 @@ void printFail(string why)
 
 	s.erase(s.size()-7);
 	std::cout << s;
-
 }
+
+/**
+ * Help method for printing to console.\n
+ * Prints the end of what you test, with information
+ * about how many subtest was successful and how many there was i total.
+ * @param total total amount of subtests
+ * @param success amount of successful subtests
+ */
 void printEnd(int total, int success)
 {
 	string s = "|";
@@ -112,6 +112,12 @@ void printEnd(int total, int success)
 	std::cout << s + "\n";
 }
 
+/**
+ * Creates a string from any type that
+ * has operator<< implemented.\n
+ * T is the type that should be casted.
+ * @param in the element to cast to string
+ */
 template<typename T>
 std::string toString(T& in)
 {
@@ -122,15 +128,26 @@ std::string toString(T& in)
 
 
 
-/* Template struct for testing */
+/** 
+ * Template struct for testing concatenation for two containers.
+ * T1 and T2 is the types of the containers. They do not have to
+ * be of the same type.
+ */
 template<typename T1, typename T2>
 struct test {
 
-	/* Tests the iterator. 
-	 * Tests finding items in the concatenation and then copying from it.
-	 * Tests normal iteration through the concatenation (auto it = conc.begin(); it != conc.end(); ++it)
-	 * Tests rangefor-iteration (auto it : conc)
+	/** 
+	 * #### Tests the iterator. \n
+	 * Tests finding items in the concatenation and then copying from it.\n
+	 * Tests normal iteration through the concatenation (auto it = conc.begin(); it != conc.end(); ++it)\n
+	 * Tests rangefor-iteration (auto it : conc)\n
 	 * Tests backwards iteration (--it)
+	 *
+	 * @param name what the console should output for this subtest
+	 * @param first the first container that should be concatenated
+	 * @param second the second container that should be concatenated
+	 * @param find A vector that contains two elements that should be searched
+	 * for with std::find.
 	 */
 	bool iterator(string name, T1& first, T2& second, typename T1::value_type find[])
 	{
@@ -243,9 +260,15 @@ struct test {
 		return success;
 	}
 
-	/* Test for writing to the concatenation.
-	 * Tests writing with iota
+	/** 
+	 * #### Test for writing to the concatenation. \n
+	 * ###### This test only works for containers with <int> due to iota. \n
+	 * Tests writing with iota. \n
 	 * Tests copying to the concatenation
+	 * 
+	 * @param name what the console should output for this subtest
+	 * @param first the first container that should be concatenated
+	 * @param second the second container that should be concatenated
 	 */
 	bool write_int(string name, T1 first, T2 second)
 	{
@@ -291,10 +314,14 @@ struct test {
 		return success;
 	}
 
-	/* Test sorting the concatenation
-	 * Tests sorting from smallest to largest.
-	 * Tests sorting from largest to smallest.
+	/** #### Test sorting and reversing the concatenation.\n
+	 * Tests sorting from smallest to largest.\n
+	 * Tests sorting from largest to smallest.\n
 	 * Tests reversing the concatenation.
+	 *
+	 * @param name what the console should output for this subtest
+	 * @param first the first container that should be concatenated
+	 * @param second the second container that should be concatenated
 	 */
 	bool sort(string name, T1 first, T2 second)
 	{
@@ -373,12 +400,17 @@ struct test {
 		return success;
 	}
 
-	/* Test for constant concatenation
-	 * Tests so cbegin() and begin() on non-const concatenation is not the same type.
-	 * Tests so cbegin() and begin() on const concatenation is of the same type.
-	 * Tests so begin() on const concatenation is not the same type as begin() on non-const.
-	 * Tests copy from const concatenation + rangefor-iteration.
+	/* #### Test for concatenation on constant containers.\n
+	 * Tests so cbegin() and begin() on non-const concatenation is not the same type. \n
+	 * Tests so cbegin() and begin() on const concatenation is of the same type. \n
+	 * Tests so begin() on const concatenation is not the same type as begin() on non-const. \n
+	 * Tests copy from const concatenation + rangefor-iteration. \n
 	 * Tests normal iterator over constant concatenation.
+	 *
+	 * @param name what the console should output for this subtest
+	 * @param first the first container that should be concatenated
+	 * @param second the second container that should be concatenated
+	 * @param find A vector that contains two elements that should be searched
 	 */
 	bool constCont(string name, T1 first, T2 second, typename T1::value_type find[])
 	{
@@ -461,7 +493,25 @@ struct test {
 		printFail(why);
 		return success;
 	}
-
+	/**
+	 * #### Test for the operators that should be present in an random access iterator.\n
+	 * Tests preincrement (++it).\n
+	 * Tests predecrement (--it).\n
+	 * Tests addition assignment (it += n).\n
+	 * Tests subtraction assignment (it -= n).\n
+	 * Tests addition operator (it2 = it + n).\n
+	 * Tests subtraction operator (it2 = it - n).\n
+	 * Tests assignment operator (in those above, it2 = it (could add + n)).\n
+	 * Tests postincrement (it++).\n
+	 * Tests postdecrement (it--).\n
+	 * Tests reference operator (*it).\n
+	 * Tests relational operators (<, >, <=, >=, ==, !=).\n
+	 * Tests distance operator (it1-it2).\n
+	 *
+	 * @param name what the console should output for this subtest
+	 * @param first the first container that should be concatenated
+	 * @param second the second container that should be concatenated
+	 */
 	bool operators(string name, T1 first, T2 second)
 	{
 		bool success = true;
@@ -484,12 +534,30 @@ struct test {
 			success = false;
 		}
 
+		--i1;
+		--i1_c;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(pre -- operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
 		i1 += 3;
 		i1_c += 3;
 
 		if(success && *i1 != *i1_c)
 		{
 			why = "(+= operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
+			success = false;
+		}
+
+		i1 -= 1;
+		i1_c -= 1;
+
+		if(success && *i1 != *i1_c)
+		{
+			why = "(-= operator) (" + toString<type>(*i1) + " != " + toString(*i1_c);
 			success = false;
 		}
 
@@ -502,14 +570,6 @@ struct test {
 			success = false;
 		}
 
-		--i2;
-		--i2_c;
-
-		if(success && *i2 != *i2_c)
-		{
-			why = "(pre -- operator) (" + toString<type>(*i2) + " != " + toString(*i2_c);
-			success = false;
-		}
 
 		i1 = i2 - 3;
 		i1_c = i2_c - 3;
@@ -561,7 +621,13 @@ struct test {
 };
 
 /**
- * Template method for testing different variations of containers
+ * #### Template method for running tests on containers (same or different type)
+ * T1_int and T1_string is the same type with <int> or <string> (e.g vector<int> and vector<string>).\n
+ * The same for T2_int and T2_string
+ *
+ * @param name what the test should be called in the output.
+ * @param total the total amount of tests that have been run (adds to the value when done)
+ * @param successful the total amount of tests that has been successful (adds to the value when done)
  */
 template <typename T1_int, typename T1_string, typename T2_int, typename T2_string>
 void container_test(string name, int& total, int& successful)
@@ -591,6 +657,15 @@ void container_test(string name, int& total, int& successful)
 	printEnd(test_result.size(),success);
 }
 
+/**
+ * #### Template method for testing concateination between two containers of the same type.
+ * Calls container_test with four types (same type two times).
+ *
+ * @param name what the test should be called in the output.
+ * @param total the total amount of tests that have been run (adds to the value when done)
+ * @param successful the total amount of tests that has been successful (adds to the value when done)
+ */
+
 template <typename T1_int, typename T1_string>
 void container_test(string name, int& total, int& successful)
 {
@@ -598,6 +673,10 @@ void container_test(string name, int& total, int& successful)
 	container_test<T1_int, T1_string, T1_int, T1_string>(name, total, successful);
 }
 
+/** 
+ * #### Method for running all tests. 
+ * Will output the total number of tests and total number of successful tests.
+ */
 void test_concatenation()
 {
 	using IntVector = std::vector<int>;
